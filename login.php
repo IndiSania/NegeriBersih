@@ -1,0 +1,9 @@
+<?php
+require_once __DIR__.'/config/database.php';require_once __DIR__.'/config/helpers.php';
+if(logged_in()){header('Location: dashboard.php');exit;}$error='';
+if($_SERVER['REQUEST_METHOD']==='POST'){verify_csrf();$email=filter_var(trim($_POST['email']??''),FILTER_VALIDATE_EMAIL);$pass=$_POST['password']??'';
+$stmt=$pdo->prepare('SELECT id,name,email,password,role FROM users WHERE email=:email AND is_active=1 LIMIT 1');$stmt->execute(['email'=>$email?:'']);$u=$stmt->fetch();
+if($u&&password_verify($pass,$u['password'])){session_regenerate_id(true);$_SESSION['user_id']=$u['id'];$_SESSION['user_name']=$u['name'];$_SESSION['role']=$u['role'];$to=$_SESSION['after_login']??'dashboard.php';unset($_SESSION['after_login']);header('Location: '.$to);exit;}else{$error='Email atau password tidak sesuai.';}}
+$pageTitle='Masuk';$basePath='';require __DIR__.'/includes/header.php';?>
+<section class="login-wrap"><div class="login-card"><span class="logo large">B</span><span class="eyebrow">AREA PENGGUNA DAN PETUGAS</span><h1>Selamat datang.</h1><p>Masuk untuk mengirim laporan atau mengelola tindak lanjut lingkungan.</p><?php if($error):?><div class="error-box"><?=e($error)?></div><?php endif;?><form method="post" class="form-stack"><input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>"><label>Email<input type="email" name="email" required autocomplete="username"></label><label>Password<input type="password" name="password" required autocomplete="current-password"></label><button class="btn btn-primary">Masuk ke akun →</button></form><div class="demo-info">Akun demo tersedia di README.md. Gunakan akun masyarakat untuk membuat laporan dan akun petugas/admin untuk mengelola laporan.</div><a class="back" href="index.php">← Kembali ke beranda</a></div></section>
+<?php require __DIR__.'/includes/footer.php';?>

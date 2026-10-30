@@ -1,0 +1,11 @@
+<?php
+require_once __DIR__.'/config/database.php';require_once __DIR__.'/config/helpers.php';
+$pageTitle='Laporan Publik';$basePath='';$q=trim($_GET['q']??'');$status=$_GET['status']??'';
+$where=[];$params=[];if($q!==''){$where[]='(title LIKE :q OR area LIKE :q OR description LIKE :q)';$params['q']='%'.$q.'%';}
+$statuses=['Menunggu','Diverifikasi','Ditangani','Selesai','Ditolak'];if(in_array($status,$statuses,true)){$where[]='status=:status';$params['status']=$status;}
+$sql='SELECT r.*,u.name AS reporter FROM reports r LEFT JOIN users u ON u.id=r.user_id'.($where?' WHERE '.implode(' AND ',$where):'').' ORDER BY r.created_at DESC LIMIT 100';
+$stmt=$pdo->prepare($sql);$stmt->execute($params);$rows=$stmt->fetchAll();require __DIR__.'/includes/header.php';
+?>
+<section class="page-banner"><div class="container"><span class="eyebrow">TRANSPARANSI DAN KOLABORASI</span><h1>Laporan dari masyarakat.</h1><p>Pantau laporan kondisi sampah dan perkembangan tindak lanjutnya.</p></div></section>
+<section class="section"><div class="container"><form class="filter" method="get"><input name="q" value="<?=e($q)?>" placeholder="Cari judul atau area..."><select name="status"><option value="">Semua status</option><?php foreach($statuses as $s):?><option <?=($status===$s?'selected':'')?>><?=e($s)?></option><?php endforeach;?></select><button class="btn btn-primary">Cari</button></form><div class="section-head row-head"><div><h2>Daftar laporan</h2><p><?=count($rows)?> laporan ditemukan</p></div><a class="btn btn-primary" href="buat-laporan.php">+ Buat Laporan</a></div><div class="report-list"><?php foreach($rows as $r):?><article class="report-row"><div class="report-row-main"><div class="report-top"><span class="status <?=status_class($r['status'])?>"><?=e($r['status'])?></span><small><?=date('d M Y · H:i',strtotime($r['created_at']))?></small></div><h3><?=e($r['title'])?></h3><p><?=e(excerpt($r['description'],180))?></p><div class="report-meta">⌖ <?=e($r['area'])?> <span>· <?=e($r['waste_type'])?></span></div></div><?php if($r['photo_url']):?><img class="report-photo" src="<?=e($r['photo_url'])?>" alt="Foto laporan" loading="lazy"><?php endif;?></article><?php endforeach;?><?php if(!$rows):?><div class="empty">Belum ada laporan yang sesuai pencarian.</div><?php endif;?></div></div></section>
+<?php require __DIR__.'/includes/footer.php';?>

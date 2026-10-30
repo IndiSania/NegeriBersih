@@ -1,0 +1,8 @@
+<?php
+require_once __DIR__.'/config/database.php';require_once __DIR__.'/config/helpers.php';
+$pageTitle='Jadwal Pengangkutan';$basePath='';$q=trim($_GET['q']??'');
+$stmt=$pdo->prepare("SELECT * FROM collection_schedules WHERE is_active=1 AND (area LIKE :q OR waste_type LIKE :q) ORDER BY FIELD(day_name,'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'),start_time");$stmt->execute(['q'=>'%'.$q.'%']);$rows=$stmt->fetchAll();require __DIR__.'/includes/header.php';
+?>
+<section class="page-banner"><div class="container"><span class="eyebrow">PENGELOLAAN TERJADWAL</span><h1>Ketahui jadwal pengangkutan.</h1><p>Periksa informasi jadwal pengangkutan sampah berdasarkan area tempat tinggalmu.</p></div></section>
+<section class="section"><div class="container"><form class="filter"><input name="q" value="<?=e($q)?>" placeholder="Cari nama desa, kelurahan, atau jenis sampah..."><button class="btn btn-primary">Cari</button></form><div class="schedule-list"><?php foreach($rows as $r):?><article class="schedule-card"><div class="day-box"><small><?=e($r['day_name'])?></small><strong><?=date('H:i',strtotime($r['start_time']))?></strong></div><div class="schedule-info"><h3><?=e($r['area'])?></h3><p><?=e($r['waste_type'])?> · <?=e($r['notes']?:'Ikuti arahan petugas setempat.')?></p></div><span class="tag"><?=e($r['service_type'])?></span></article><?php endforeach;?><?php if(!$rows):?><div class="empty">Jadwal tidak ditemukan.</div><?php endif;?></div><div class="map-note">Jadwal merupakan contoh data untuk demonstrasi. Jadwal operasional sebenarnya ditetapkan oleh pengelola atau instansi setempat.</div></div></section>
+<?php require __DIR__.'/includes/footer.php';?>
